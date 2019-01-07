@@ -1,9 +1,16 @@
 # django-buster
 
-A simple Django utility for adding cache busters to static assets. This project is meant as a companion to use alongside [gulp-buster](https://www.npmjs.org/package/gulp-buster). You can use gulp-buster as part of your build process to generate a busters.json file, and use django-buster from within your Django templates to read the file and append the hashes to your static asset urls.
+A simple Django utility for adding cache busters to static assets. This project
+is meant as a companion to use alongside [gulp-buster](https://www.npmjs.org/package/gulp-buster).
+You can use gulp-buster as part of your build process to generate a
+busters.json file, and use django-buster from within your Django templates to
+read the file and append the hashes to your static asset urls.
 
 ## Generating a busters.json file
-If building your static assets with gulp, you may use gulp-buster to save a hash for each of your static assets. You must configure your gulpfile to output a busters.json using gulp-buster. This file will contain a mapping of each file path to its hash. A busters.json file might look like the following:
+If building your static assets with gulp, you may use gulp-buster to save a
+hash for each of your static assets. You must configure your gulpfile to output
+a busters.json using gulp-buster. This file will contain a mapping of each file
+path to its hash. A busters.json file might look like the following:
 
 ```
 {
@@ -18,7 +25,8 @@ See the [gulp-buster](https://www.npmjs.org/package/gulp-buster) project for mor
 
 ## Integrating with Django
 
-In your Django templates, use the `{% buster %}` templatetag to append a cachebuster querystring to your asset urls. For example:
+In your Django templates, use the `{% buster %}` templatetag to append a cache
+buster querystring to your asset urls. For example:
 
 ```
 <link rel="stylesheet" href="{% buster %}{% static "dist/styles.css" %}{% endbuster %}" type="text/css" />
@@ -36,23 +44,18 @@ Would output something like the following
 
 ## Operation
 
-Upon rendering a template, the `buster` template will read the busters.json using Django's staticfiles storagefile. It will append the hash found in that file if it exists. The busters.json file is only read once, after which it is cached until either the cache timeout setting is reached or a reload is forced using the management command (see below).
+Upon rendering a template, the `buster` template will read the busters.json
+using Django's staticfiles storagefile. It will append the hash found in that
+file if it exists. if `settings.BUSTER_CACHE` is True, the busters.json file is
+only read once, after which it is cached in memory. This is the default when
+`DEBUG = False`.
 
-## Management commands
-
-Because django-buster caches the busters.json file, a management command is provided to re-read the file. It is advised to run this command as part of your deployment process.
-
-`manage.py buster reload`: will re-read the busters.json file and re-cache its contents. Run this after deploying static assets.
-
-`manage.py buster clear`: will clear the cached version of the busters.json file.
 
 ## Settings
 
 `BUSTER_FILE`  
-This is the location of your busters.json file. This path is relative to your STATIC_ROOT directory.  Defaults to `dist/busters.json`
+This is the path of your busters.json file. This path is relative to your `STATIC_ROOT` directory. Defaults to `dist/busters.json`
 
-`BUSTER_CACHE_KEY`  
-The cache key to use for caching the busters.json file. Defaults to `BUSTERS_JSON`
-
-`BUSTER_CACHE_TIMEOUT`  
-The timeout for caching the busters.json file contents. Defaults to cache indefinitely.
+`BUSTER_CACHE`  
+Whether to cache busters.json after first load. If this is True, then the
+busters.json file will not be read again until the server is reloaded. Defaults to True if `DEBUG = False`.

@@ -6,13 +6,6 @@ from .. import get_buster_json, get_buster_for_url
 register = template.Library()
 
 
-@register.tag
-def buster(parser, token):
-    nodelist = parser.parse(('endbuster',))
-    parser.delete_first_token()
-    return BusterNode(nodelist)
-
-
 class BusterNode(template.Node):
     def __init__(self, nodelist):
         self.nodelist = nodelist
@@ -24,6 +17,13 @@ class BusterNode(template.Node):
         if buster:
             return u'{0}?{1}'.format(url, buster)
         return url
+
+
+@register.tag
+def buster(parser, token):
+    nodelist = parser.parse(('endbuster',))
+    parser.delete_first_token()
+    return BusterNode(nodelist)
 
 
 @register.simple_tag

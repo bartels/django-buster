@@ -3,27 +3,25 @@ A Django app for appending cache buster strings to html resources, and loading
 json file created with gulp-buster.
 see: https://github.com/UltCombo/gulp-buster
 
-
 Example use of the templatetag:
     <script src="{% buster %}{% static "js/app.js" %}{% endbuster %}"></script>
-
-A management command can be used to clear or reload the buster json file in the
-django cache. Example:
-
-`manage.py buster reload` or `manage.py buster clear`
 """
 
 import re
 import json
 
-from django.core.cache import cache
 from django.contrib.staticfiles.storage import staticfiles_storage
 from django.conf import settings
 
 
+# The file to read cache buster json from
 BUSTER_FILE = getattr(settings, 'BUSTER_FILE', 'dist/busters.json')
-BUSTER_CACHE_KEY = getattr(settings, 'BUSTER_CACHE_KEY', 'BUSTERS_JSON')
-BUSTER_CACHE_TIMEOUT = getattr(settings, 'BUSTER_CACHE_TIMEOUT', None)
+
+# Whether to cache the buster json on first load
+BUSTER_CACHE = getattr(settings, 'BUSTER_CACHE', not settings.DEBUG)
+
+BUSTER_CACHE_KEY = 'buster_cache'
+cache = {}
 
 
 def get_buster_json(buster_file=BUSTER_FILE):
@@ -32,9 +30,10 @@ def get_buster_json(buster_file=BUSTER_FILE):
     staticfiles storage.
     """
     # First check for cached version
-    buster_json = cache.get(BUSTER_CACHE_KEY)
-    if buster_json is not None:
-        return buster_json
+    if BUSTER_CACHE:
+        buster_json = cache.get(BUSTER_CACHE_KEY)
+        if buster_json is not None:
+            return buster_json
 
     # Look for busters file in staticfiles storage
     buster_json = ''
@@ -50,7 +49,7 @@ def get_buster_json(buster_file=BUSTER_FILE):
             pass
 
     # cache the json
-    cache.set(BUSTER_CACHE_KEY, buster_json, BUSTER_CACHE_TIMEOUT)
+    cache[BUSTER_CACHE_KEY] = buster_json
 
     return buster_json
 
@@ -74,18 +73,3 @@ def get_buster_for_url(url, busters=None):
         return busters[relpath]
     except KeyError:
         return None
-
-
-def clear_buster_cache():
-    """
-    Deletes the buster json data from cache
-    """
-    cache.delete(BUSTER_CACHE_KEY)
-
-
-def reload_buster_cache():
-    """
-    Clears cache, then reloads the buster json data
-    """
-    clear_buster_cache()
-    get_buster_json()  # will fill cache again

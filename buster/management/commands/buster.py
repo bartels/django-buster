@@ -1,22 +1,12 @@
-from django.core.management.base import LabelCommand, CommandError
-
-from ... import reload_buster_cache, clear_buster_cache
+import warnings
+from django.core.management.base import LabelCommand
 
 
 class Command(LabelCommand):
     args = '<clear | reload>'
     label = 'command'
     help = """clear: clear cached busters json
-reload: reload cached busters json"""
+reload: reload cached busters json (DEPRECATED)"""
 
     def handle_label(self, label, **options):
-
-        if label == 'clear':
-            clear_buster_cache()
-            self.stdout.write('Cleared busters cache.')
-        elif label == 'reload':
-            reload_buster_cache()
-            self.stdout.write('Reloaded busters cache.')
-
-        else:
-            raise CommandError("Commands are: 'clear' or 'reload'")
+        warnings.warn('The "buster" command is deprecated. Instead, set BUSTER_CACHE = True in settings.py to cache until server reload.') # noqa
